@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
+NDK_PATH="/home/mustafa/android-ndk/android-ndk-r26b"
+if [ -n "$ANDROID_NDK" ]; then
+    NDK_PATH="$ANDROID_NDK"
+fi
+
+NDK_CLANG="$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android23-clang"
+NDK_AR="$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+
 echo "=== 1. Building Rust Native CDYLIB (Production Release) ==="
+CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$NDK_CLANG" \
+CARGO_TARGET_AARCH64_LINUX_ANDROID_AR="$NDK_AR" \
 cargo build --target aarch64-linux-android --release
 
 mkdir -p target/release/apk/lib/arm64-v8a
