@@ -15,13 +15,13 @@ echo "=== 3. Generating Dalvik Executable (classes.dex) ==="
 "$ANDROID_HOME/build-tools/34.0.0/d8" --lib "$ANDROID_HOME/platforms/android-34/android.jar" \
   --output target/dex target/java_classes/com/example/android_video_player/*.class
 
-echo "=== 4. Compiling Binary AndroidManifest.xml ==="
-"$ANDROID_HOME/build-tools/34.0.0/aapt" package -f -M AndroidManifest.xml \
+echo "=== 4. Compiling Binary AndroidManifest.xml & Resources ==="
+"$ANDROID_HOME/build-tools/34.0.0/aapt" package -f -M AndroidManifest.xml -S res \
   -I "$ANDROID_HOME/platforms/android-34/android.jar" -F target/manifest_out.apk
-unzip -o target/manifest_out.apk AndroidManifest.xml -d target/compiled_manifest/
+unzip -o target/manifest_out.apk -d target/compiled_manifest/
 
-echo "=== 5. Packaging AndroidManifest.xml & classes.dex into APK ==="
-zip -j target/debug/apk/android_video_player.apk target/compiled_manifest/AndroidManifest.xml > /dev/null
+echo "=== 5. Packaging AndroidManifest.xml, Resources & classes.dex into APK ==="
+(cd target/compiled_manifest && zip -r ../debug/apk/android_video_player.apk . > /dev/null)
 zip -j target/debug/apk/android_video_player.apk target/dex/classes.dex > /dev/null
 
 echo "=== 6. Signing Final APK with Debug Key ==="

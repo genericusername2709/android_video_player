@@ -12,7 +12,9 @@
   <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
   <application
-    android:label="Rust Video Player"
+    android:label="TVideoPlayer"
+    android:icon="@mipmap/ic_launcher"
+    android:roundIcon="@mipmap/ic_launcher"
     android:hardwareAccelerated="true"
     android:hasCode="true">
 
