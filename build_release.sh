@@ -27,7 +27,6 @@ if [ -f "$ENV_FILE" ]; then
 fi
 
 if [ -z "$KEYSTORE_PASS" ]; then
-    # Generate secure 32-character random password
     KEYSTORE_PASS=$(openssl rand -hex 16 2>/dev/null || date +%s | sha256sum | base64 | head -c 32)
     KEY_PASS="$KEYSTORE_PASS"
     echo "KEYSTORE_PASS=\"$KEYSTORE_PASS\"" > "$ENV_FILE"
@@ -65,8 +64,8 @@ unzip -o target/release_manifest_out.apk -d target/release_compiled_manifest/
 
 echo "=== 5. Packaging AndroidManifest.xml, Resources, classes.dex & libandroid_video_player.so into Release APK ==="
 rm -f target/release/apk/android_video_player_unaligned.apk
-(cd target/release/apk && zip -r android_video_player_unaligned.apk lib/ > /dev/null)
-(cd target/release_compiled_manifest && zip -r ../release/apk/android_video_player_unaligned.apk . > /dev/null)
+(cd target/release/apk && zip -r0 android_video_player_unaligned.apk lib/ > /dev/null)
+(cd target/release_compiled_manifest && zip -r0 ../release/apk/android_video_player_unaligned.apk . > /dev/null)
 zip -j target/release/apk/android_video_player_unaligned.apk target/release_dex/classes.dex > /dev/null
 
 echo "=== 6. Zipaligning Release APK ==="

@@ -20,11 +20,17 @@ echo "=== 4. Compiling Binary AndroidManifest.xml & Resources ==="
   -I "$ANDROID_HOME/platforms/android-34/android.jar" -F target/manifest_out.apk
 unzip -o target/manifest_out.apk -d target/compiled_manifest/
 
-echo "=== 5. Packaging AndroidManifest.xml, Resources & classes.dex into APK ==="
-(cd target/compiled_manifest && zip -r ../debug/apk/android_video_player.apk . > /dev/null)
-zip -j target/debug/apk/android_video_player.apk target/dex/classes.dex > /dev/null
+echo "=== 5. Packaging AndroidManifest.xml, Uncompressed Resources & classes.dex into APK ==="
+rm -f target/debug/apk/android_video_player_unaligned.apk
+# Use zip -r0 so resources.arsc remains uncompressed on 4-byte boundary!
+(cd target/compiled_manifest && zip -r0 ../debug/apk/android_video_player_unaligned.apk . > /dev/null)
+zip -j target/debug/apk/android_video_player_unaligned.apk target/dex/classes.dex > /dev/null
 
-echo "=== 6. Signing Final APK with Debug Key ==="
+echo "=== 6. Zipaligning APK ==="
+"$ANDROID_HOME/build-tools/34.0.0/zipalign" -f 4 \
+  target/debug/apk/android_video_player_unaligned.apk target/debug/apk/android_video_player.apk
+
+echo "=== 7. Signing Final APK with Debug Key ==="
 "$ANDROID_HOME/build-tools/34.0.0/apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android \
   target/debug/apk/android_video_player.apk
 
