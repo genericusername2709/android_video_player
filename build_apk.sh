@@ -20,9 +20,12 @@ echo "=== 4. Compiling Binary AndroidManifest.xml & Resources ==="
   -I "$ANDROID_HOME/platforms/android-34/android.jar" -F target/manifest_out.apk
 unzip -o target/manifest_out.apk -d target/compiled_manifest/
 
-echo "=== 5. Packaging AndroidManifest.xml, Uncompressed Resources & classes.dex into APK ==="
+echo "=== 5. Packaging Native Library, AndroidManifest.xml, Uncompressed Resources & classes.dex into APK ==="
 rm -f target/debug/apk/android_video_player_unaligned.apk
-# Use zip -r0 so resources.arsc remains uncompressed on 4-byte boundary!
+mkdir -p target/debug/apk/lib/arm64-v8a
+cp target/aarch64-linux-android/debug/libandroid_video_player.so target/debug/apk/lib/arm64-v8a/
+
+(cd target/debug/apk && zip -r0 android_video_player_unaligned.apk lib/ > /dev/null)
 (cd target/compiled_manifest && zip -r0 ../debug/apk/android_video_player_unaligned.apk . > /dev/null)
 zip -j target/debug/apk/android_video_player_unaligned.apk target/dex/classes.dex > /dev/null
 
