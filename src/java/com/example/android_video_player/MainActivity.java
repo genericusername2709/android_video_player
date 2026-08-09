@@ -20,6 +20,15 @@ public class MainActivity extends NativeActivity {
     public static String lastSelectedUri = null;
     public static int lastRequestCode = 0;
     public static boolean hasNewResult = false;
+    public static boolean hasPickerFinished = false;
+
+    public static synchronized boolean consumePickerFinished() {
+        if (hasPickerFinished) {
+            hasPickerFinished = false;
+            return true;
+        }
+        return false;
+    }
 
     public static volatile long lastSelectedPositionMs = 0;
     public static volatile String lastRenamedTitle = null;
@@ -58,6 +67,12 @@ public class MainActivity extends NativeActivity {
             }
             isPlayerActive = false;
             return;
+        }
+
+        if (requestCode == 1001 || requestCode == 1002) {
+            synchronized (MainActivity.class) {
+                hasPickerFinished = true;
+            }
         }
 
         if (resultCode == RESULT_OK && data != null && data.getData() != null) {

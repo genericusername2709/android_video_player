@@ -565,6 +565,38 @@ pub fn query_last_selected_uri(app: &AndroidApp) -> Option<String> {
     res.unwrap_or(None)
 }
 
+/// Query Activity if file picker has finished (or was cancelled)
+pub fn query_picker_finished(app: &AndroidApp) -> bool {
+    let vm_ptr = app.vm_as_ptr();
+    if vm_ptr.is_null() {
+        return false;
+    }
+    let vm = match unsafe { JavaVM::from_raw(vm_ptr.cast()) } {
+        Ok(v) => v,
+        Err(_) => return false,
+    };
+    let mut env = match vm.attach_current_thread() {
+        Ok(e) => e,
+        Err(_) => return false,
+    };
+
+    if env.exception_check().unwrap_or(false) {
+        let _ = env.exception_clear();
+    }
+
+    let res: Result<bool, jni::errors::Error> = env.with_local_frame(16, |env| {
+        if let Ok(main_cls) = get_main_activity_class(env, app) {
+            if let Ok(val) = env.call_static_method(&main_cls, "consumePickerFinished", "()Z", &[]) {
+                if let Ok(b) = val.z() {
+                    return Ok(b);
+                }
+            }
+        }
+        Ok(false)
+    });
+    res.unwrap_or(false)
+}
+
 /// Resolves a content:// or file:// URI to a FavoriteMediaFile struct
 pub fn resolve_favorite_media_file(
     app: &AndroidApp,

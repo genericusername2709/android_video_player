@@ -8,7 +8,7 @@ use favourites::{FavoriteMediaFile, FavoritesManager};
 use log::{error, info};
 use media_picker::{
     clear_last_purpose, get_last_purpose, open_android_file_picker, play_media_in_app,
-    query_delete_result, query_last_selected_uri, query_playback_position, query_rename_result,
+    query_delete_result, query_last_selected_uri, query_picker_finished, query_playback_position, query_rename_result,
     resolve_favorite_media_file, show_delete_dialog, show_rename_dialog, PickerPurpose,
 };
 use raw_window_handle::{AndroidDisplayHandle, HasRawWindowHandle, RawDisplayHandle};
@@ -523,9 +523,9 @@ fn check_picker_result(
     status_msg: &mut String,
     is_playing_video: &mut bool,
 ) -> bool {
+    let mut updated = false;
     if let Some(uri) = query_last_selected_uri(app) {
         if let Some(purpose) = get_last_purpose() {
-            let mut updated = false;
             match purpose {
                 PickerPurpose::PlayFile => {
                     info!("Playing selected file URI: {}", uri);
@@ -579,8 +579,11 @@ fn check_picker_result(
         } else {
             clear_last_purpose();
         }
+    } else if query_picker_finished(app) {
+        info!("File picker activity finished or was cancelled without selection");
+        clear_last_purpose();
     }
-    false
+    updated
 }
 
 fn check_rename_updates(
