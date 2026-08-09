@@ -17,18 +17,33 @@ cargo build --target aarch64-linux-android --release
 mkdir -p target/release/apk/lib/arm64-v8a
 cp target/aarch64-linux-android/release/libandroid_video_player.so target/release/apk/lib/arm64-v8a/
 
+# Load or generate secure keystore password stored in git-ignored .env.release_key
+ENV_FILE=".env.release_key"
 KEYSTORE_PATH="release.keystore"
 KEY_ALIAS="release-key"
 
+if [ -f "$ENV_FILE" ]; then
+    source "$ENV_FILE"
+fi
+
+if [ -z "$KEYSTORE_PASS" ]; then
+    # Generate secure 32-character random password
+    KEYSTORE_PASS=$(openssl rand -hex 16 2>/dev/null || date +%s | sha256sum | base64 | head -c 32)
+    KEY_PASS="$KEYSTORE_PASS"
+    echo "KEYSTORE_PASS=\"$KEYSTORE_PASS\"" > "$ENV_FILE"
+    echo "KEY_PASS=\"$KEY_PASS\"" >> "$ENV_FILE"
+    chmod 600 "$ENV_FILE"
+    echo "=== Generated secure random password stored in git-ignored '$ENV_FILE' ==="
+fi
+
 if [ ! -f "$KEYSTORE_PATH" ]; then
-    echo "=== Release keystore not found at $KEYSTORE_PATH ==="
-    echo "Generating new production keystore '$KEYSTORE_PATH'..."
+    echo "=== Generating fresh secure production keystore '$KEYSTORE_PATH' ==="
     keytool -genkey -v -keystore "$KEYSTORE_PATH" \
         -alias "$KEY_ALIAS" \
         -keyalg RSA -keysize 2048 \
         -validity 10000 \
-        -storepass "androidrelease" \
-        -keypass "androidrelease" \
+        -storepass "$KEYSTORE_PASS" \
+        -keypass "$KEY_PASS" \
         -dname "CN=Android Player, OU=Dev, O=App, L=City, ST=State, C=US"
 fi
 
@@ -60,8 +75,8 @@ echo "=== 6. Zipaligning Release APK ==="
 
 echo "=== 7. Signing Final Release APK with Release Keystore ==="
 "$ANDROID_HOME/build-tools/34.0.0/apksigner" sign --ks "$KEYSTORE_PATH" \
-  --ks-pass pass:androidrelease \
-  --key-pass pass:androidrelease \
+  --ks-pass "pass:$KEYSTORE_PASS" \
+  --key-pass "pass:$KEY_PASS" \
   --ks-key-alias "$KEY_ALIAS" \
   target/release/apk/android_video_player_aligned.apk
 
