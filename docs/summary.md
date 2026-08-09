@@ -30,10 +30,10 @@ The **Android GPU Video Player** is a high-performance native Android applicatio
                     |                                   |
                     v                                   v
 +-------------------+-------------------+   +-----------+-----------------------+
-|  MainActivity.java (NativeActivity)  |   |    VideoPlayerActivity.java      |
-|  - JNI Bridges                    |   |    - VideoView & MediaController   |
-|  - SAF Intent Picker              |   |    - Position Tracker Runnable     |
-|  - Rename & Delete Alert Dialogs   |   |    - Returns last_position         |
+|  MainActivity.java (NativeActivity)   |   |    VideoPlayerActivity.java       |
+|  - JNI Bridges                        |   |    - VideoView & MediaController  |
+|  - SAF Intent Picker                  |   |    - Position Tracker Runnable    |
+|  - Rename & Delete Alert Dialogs      |   |    - Returns last_position        |
 +-------------------+-------------------+   +-----------+-----------------------+
                     |                                   ^
                     | JNI Calls                         | Intent Launch
@@ -79,12 +79,3 @@ The **Android GPU Video Player** is a high-performance native Android applicatio
 
 ---
 
-## 4. Assets Directory Status
-
-### Question: Is the `assets/` directory being used?
-
-**No, the `assets/` directory is NOT being used by the application.**
-
-- **Current Contents:** `assets/test.txt` (a 11-byte dummy file).
-- **Codebase References:** Searching the entire Rust and Java codebase confirms **0 references** to `assets/` or `AAssetManager`.
-- **Reason:** The application loads user media via `content://` URIs provided by Android's Storage Access Framework (`ContentResolver`) and loads stored application data from internal JSON app files (`/data/user/0/com.example.android_video_player/files/favourites.json`).

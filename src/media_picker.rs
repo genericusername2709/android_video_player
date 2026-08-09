@@ -1,7 +1,7 @@
 use crate::favourites::FavoriteMediaFile;
 use android_activity::AndroidApp;
-use jni::objects::{JClass, JObject, JString, JValue};
 use jni::JavaVM;
+use jni::objects::{JClass, JObject, JString, JValue};
 use log::info;
 use std::sync::Mutex;
 
@@ -61,7 +61,12 @@ fn get_main_activity_class<'a>(
     let activity = get_java_activity(app)?;
 
     let class_loader = env
-        .call_method(&activity, "getClassLoader", "()Ljava/lang/ClassLoader;", &[])
+        .call_method(
+            &activity,
+            "getClassLoader",
+            "()Ljava/lang/ClassLoader;",
+            &[],
+        )
         .map_err(|e| format!("Failed to get ClassLoader: {:?}", e))?
         .l()
         .map_err(|e| format!("Invalid ClassLoader object: {:?}", e))?;
@@ -85,10 +90,11 @@ fn get_main_activity_class<'a>(
 }
 
 /// Triggers Android's native file selection dialog via MainActivity.openFilePicker
-pub fn open_android_file_picker(
-    app: &AndroidApp,
-    purpose: PickerPurpose,
-) -> Result<(), String> {
+pub fn open_android_file_picker(app: &AndroidApp, purpose: PickerPurpose) -> Result<(), String> {
+    if query_picker_finished(app) {
+        clear_last_purpose();
+    }
+
     // PREVENT DUPLICATE INTENT SPAM: Ignore duplicate tap events if picker is already active
     if get_last_purpose().is_some() {
         info!("File picker is already active, ignoring duplicate tap");
@@ -107,17 +113,14 @@ pub fn open_android_file_picker(
         return Err("Java VM pointer is null".to_string());
     }
 
-    let vm = unsafe { JavaVM::from_raw(vm_ptr.cast()) }
-        .map_err(|e| {
-            clear_last_purpose();
-            format!("Failed to attach JavaVM: {:?}", e)
-        })?;
-    let mut env = vm
-        .attach_current_thread()
-        .map_err(|e| {
-            clear_last_purpose();
-            format!("Failed to attach thread: {:?}", e)
-        })?;
+    let vm = unsafe { JavaVM::from_raw(vm_ptr.cast()) }.map_err(|e| {
+        clear_last_purpose();
+        format!("Failed to attach JavaVM: {:?}", e)
+    })?;
+    let mut env = vm.attach_current_thread().map_err(|e| {
+        clear_last_purpose();
+        format!("Failed to attach thread: {:?}", e)
+    })?;
 
     if env.exception_check().unwrap_or(false) {
         let _ = env.exception_clear();
@@ -293,38 +296,6 @@ pub fn query_playback_position(app: &AndroidApp) -> u64 {
     res.unwrap_or(0)
 }
 
-/// Query whether in-app video overlay is currently active and visible
-pub fn is_video_playing_in_app(app: &AndroidApp) -> bool {
-    let vm_ptr = app.vm_as_ptr();
-    if vm_ptr.is_null() {
-        return false;
-    }
-    let vm = match unsafe { JavaVM::from_raw(vm_ptr.cast()) } {
-        Ok(v) => v,
-        Err(_) => return false,
-    };
-    let mut env = match vm.attach_current_thread() {
-        Ok(e) => e,
-        Err(_) => return false,
-    };
-
-    if env.exception_check().unwrap_or(false) {
-        let _ = env.exception_clear();
-    }
-
-    let res: Result<bool, jni::errors::Error> = env.with_local_frame(16, |env| {
-        if let Ok(main_cls) = get_main_activity_class(env, app) {
-            if let Ok(val) = env.call_static_method(&main_cls, "isVideoPlayingInApp", "()Z", &[]) {
-                if let Ok(b) = val.z() {
-                    return Ok(b);
-                }
-            }
-        }
-        Ok(false)
-    });
-    res.unwrap_or(false)
-}
-
 /// Close and stop in-app video player overlay
 #[allow(dead_code)]
 pub fn close_video_player(app: &AndroidApp) -> Result<(), String> {
@@ -409,28 +380,30 @@ pub fn query_rename_result(app: &AndroidApp) -> Option<(usize, String)> {
         let _ = env.exception_clear();
     }
 
-    let res: Result<Option<(usize, String)>, jni::errors::Error> = env.with_local_frame(16, |env| {
-        if let Ok(main_cls) = get_main_activity_class(env, app) {
-            if let Ok(val) = env.call_static_method(
-                &main_cls,
-                "consumeRenamedTitle",
-                "()Ljava/lang/String;",
-                &[],
-            ) {
-                if let Ok(obj) = val.l() {
-                    if !obj.is_null() {
-                        let j_str: JString = obj.into();
-                        if let Ok(rust_str) = env.get_string(&j_str) {
-                            let title: String = rust_str.into();
-                            if let Ok(idx_val) = env.call_static_method(
-                                &main_cls,
-                                "getRenamedIndexAndClear",
-                                "()I",
-                                &[],
-                            ) {
-                                if let Ok(idx) = idx_val.i() {
-                                    if idx >= 0 {
-                                        return Ok(Some((idx as usize, title)));
+    let res: Result<Option<(usize, String)>, jni::errors::Error> =
+        env.with_local_frame(16, |env| {
+            if let Ok(main_cls) = get_main_activity_class(env, app) {
+                if let Ok(val) = env.call_static_method(
+                    &main_cls,
+                    "consumeRenamedTitle",
+                    "()Ljava/lang/String;",
+                    &[],
+                ) {
+                    if let Ok(obj) = val.l() {
+                        if !obj.is_null() {
+                            let j_str: JString = obj.into();
+                            if let Ok(rust_str) = env.get_string(&j_str) {
+                                let title: String = rust_str.into();
+                                if let Ok(idx_val) = env.call_static_method(
+                                    &main_cls,
+                                    "getRenamedIndexAndClear",
+                                    "()I",
+                                    &[],
+                                ) {
+                                    if let Ok(idx) = idx_val.i() {
+                                        if idx >= 0 {
+                                            return Ok(Some((idx as usize, title)));
+                                        }
                                     }
                                 }
                             }
@@ -438,9 +411,8 @@ pub fn query_rename_result(app: &AndroidApp) -> Option<(usize, String)> {
                     }
                 }
             }
-        }
-        Ok(None)
-    });
+            Ok(None)
+        });
     res.unwrap_or(None)
 }
 
@@ -507,12 +479,7 @@ pub fn query_delete_result(app: &AndroidApp) -> Option<usize> {
 
     let res: Result<Option<usize>, jni::errors::Error> = env.with_local_frame(16, |env| {
         if let Ok(main_cls) = get_main_activity_class(env, app) {
-            if let Ok(val) = env.call_static_method(
-                &main_cls,
-                "consumeDeletedIndex",
-                "()I",
-                &[],
-            ) {
+            if let Ok(val) = env.call_static_method(&main_cls, "consumeDeletedIndex", "()I", &[]) {
                 if let Ok(idx) = val.i() {
                     if idx >= 0 {
                         return Ok(Some(idx as usize));
@@ -540,12 +507,9 @@ pub fn query_last_selected_uri(app: &AndroidApp) -> Option<String> {
 
     let res: Result<Option<String>, jni::errors::Error> = env.with_local_frame(16, |env| {
         if let Ok(main_cls) = get_main_activity_class(env, app) {
-            if let Ok(val) = env.call_static_method(
-                &main_cls,
-                "consumeSelectedUri",
-                "()Ljava/lang/String;",
-                &[],
-            ) {
+            if let Ok(val) =
+                env.call_static_method(&main_cls, "consumeSelectedUri", "()Ljava/lang/String;", &[])
+            {
                 if let Ok(obj) = val.l() {
                     if !obj.is_null() {
                         let j_str: JString = obj.into();
@@ -586,7 +550,8 @@ pub fn query_picker_finished(app: &AndroidApp) -> bool {
 
     let res: Result<bool, jni::errors::Error> = env.with_local_frame(16, |env| {
         if let Ok(main_cls) = get_main_activity_class(env, app) {
-            if let Ok(val) = env.call_static_method(&main_cls, "consumePickerFinished", "()Z", &[]) {
+            if let Ok(val) = env.call_static_method(&main_cls, "consumePickerFinished", "()Z", &[])
+            {
                 if let Ok(b) = val.z() {
                     return Ok(b);
                 }
@@ -766,4 +731,3 @@ fn urlencoding_decode(s: &str) -> String {
         .replace("%2F", "/")
         .replace("%2C", ",")
 }
-

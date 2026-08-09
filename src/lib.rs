@@ -1,15 +1,15 @@
 mod favourites;
 mod media_picker;
-mod ui;
 mod ui_renderer;
 
 use android_activity::{AndroidApp, MainEvent, PollEvent};
 use favourites::{FavoriteMediaFile, FavoritesManager};
 use log::{error, info};
 use media_picker::{
-    clear_last_purpose, get_last_purpose, open_android_file_picker, play_media_in_app,
-    query_delete_result, query_last_selected_uri, query_picker_finished, query_playback_position, query_rename_result,
-    resolve_favorite_media_file, show_delete_dialog, show_rename_dialog, PickerPurpose,
+    PickerPurpose, clear_last_purpose, get_last_purpose, open_android_file_picker,
+    play_media_in_app, query_delete_result, query_last_selected_uri, query_picker_finished,
+    query_playback_position, query_rename_result, resolve_favorite_media_file, show_delete_dialog,
+    show_rename_dialog,
 };
 use raw_window_handle::{AndroidDisplayHandle, HasRawWindowHandle, RawDisplayHandle};
 use std::sync::atomic::{AtomicIsize, Ordering};
@@ -139,8 +139,16 @@ impl RenderState {
 
     fn map_touch_pos(&self, touch_x: f32, touch_y: f32) -> egui::Pos2 {
         let (native_w, native_h) = self.native_window_size;
-        let scale_x = if native_w > 0.0 { self.config.width as f32 / native_w } else { 1.0 };
-        let scale_y = if native_h > 0.0 { self.config.height as f32 / native_h } else { 1.0 };
+        let scale_x = if native_w > 0.0 {
+            self.config.width as f32 / native_w
+        } else {
+            1.0
+        };
+        let scale_y = if native_h > 0.0 {
+            self.config.height as f32 / native_h
+        } else {
+            1.0
+        };
 
         let surface_x = touch_x * scale_x;
         let surface_y = touch_y * scale_y;
@@ -185,7 +193,8 @@ impl RenderState {
             );
         });
 
-        let clipped_primitives = egui_ctx.tessellate(full_output.shapes, full_output.pixels_per_point);
+        let clipped_primitives =
+            egui_ctx.tessellate(full_output.shapes, full_output.pixels_per_point);
 
         let output = match self.surface.get_current_texture() {
             Ok(frame) => frame,
@@ -215,7 +224,9 @@ impl RenderState {
         };
 
         for (id, delta) in &full_output.textures_delta.set {
-            self.egui_renderer.renderer.update_texture(&self.device, &self.queue, *id, delta);
+            self.egui_renderer
+                .renderer
+                .update_texture(&self.device, &self.queue, *id, delta);
         }
 
         self.egui_renderer.renderer.update_buffers(
@@ -282,8 +293,6 @@ fn android_main(app: AndroidApp) {
     let mut needs_redraw = true;
     let mut is_playing_video = false;
 
-    let mut last_touch_down_pos: Option<egui::Pos2> = None;
-
     loop {
         let timeout = Duration::from_millis(100);
         let mut should_exit = false;
@@ -313,9 +322,12 @@ fn android_main(app: AndroidApp) {
                 sync_active_playback_position(&app, &favorites_mgr);
             }
             PollEvent::Main(MainEvent::Resume { .. }) => {
-                info!("Activity resumed - checking for selected file intent data or rename result...");
+                info!(
+                    "Activity resumed - checking for selected file intent data or rename result..."
+                );
                 needs_redraw = true;
-                if check_picker_result(&app, &favorites_mgr, &mut status_msg, &mut is_playing_video) {
+                if check_picker_result(&app, &favorites_mgr, &mut status_msg, &mut is_playing_video)
+                {
                     needs_redraw = true;
                 }
                 if check_rename_updates(&app, &favorites_mgr, &mut status_msg) {
@@ -427,7 +439,9 @@ fn android_main(app: AndroidApp) {
                 let playing_title = if is_playing_video {
                     let active_idx = ACTIVE_PLAYING_FAV_INDEX.load(Ordering::SeqCst);
                     if active_idx >= 0 {
-                        favorites_list.get(active_idx as usize).map(|f| f.display_name.as_str())
+                        favorites_list
+                            .get(active_idx as usize)
+                            .map(|f| f.display_name.as_str())
                     } else {
                         Some("Playing Video")
                     }
@@ -447,7 +461,9 @@ fn android_main(app: AndroidApp) {
                     EguiAppAction::AddFavorite => {
                         info!("User tapped [ADD FAVOURITE]");
                         status_msg = "Opening file picker...".to_string();
-                        if let Err(e) = open_android_file_picker(&app, PickerPurpose::AddToFavorites) {
+                        if let Err(e) =
+                            open_android_file_picker(&app, PickerPurpose::AddToFavorites)
+                        {
                             error!("Failed to open file picker: {}", e);
                             status_msg = format!("Error: {}", e);
                         }
@@ -463,11 +479,20 @@ fn android_main(app: AndroidApp) {
                     EguiAppAction::PlayFavorite(idx) => {
                         let favs = favorites_mgr.get_all();
                         if let Some(fav) = favs.get(idx) {
-                            info!("User tapped Play on favourite #{}: {}", idx + 1, fav.display_name);
+                            info!(
+                                "User tapped Play on favourite #{}: {}",
+                                idx + 1,
+                                fav.display_name
+                            );
                             status_msg = format!("Playing '{}'...", fav.display_name);
                             ACTIVE_PLAYING_FAV_INDEX.store(idx as isize, Ordering::SeqCst);
                             is_playing_video = true;
-                            if let Err(e) = play_media_in_app(&app, &fav.uri, fav.last_position_ms, &fav.display_name) {
+                            if let Err(e) = play_media_in_app(
+                                &app,
+                                &fav.uri,
+                                fav.last_position_ms,
+                                &fav.display_name,
+                            ) {
                                 error!("Failed to play favourite: {}", e);
                                 status_msg = format!("Error playing: {}", e);
                                 is_playing_video = false;
@@ -477,7 +502,11 @@ fn android_main(app: AndroidApp) {
                     EguiAppAction::RenameFavorite(idx) => {
                         let favs = favorites_mgr.get_all();
                         if let Some(fav) = favs.get(idx) {
-                            info!("User tapped Rename on favourite #{}: {}", idx + 1, fav.display_name);
+                            info!(
+                                "User tapped Rename on favourite #{}: {}",
+                                idx + 1,
+                                fav.display_name
+                            );
                             status_msg = format!("Renaming '{}'...", fav.display_name);
                             if let Err(e) = show_rename_dialog(&app, idx, &fav.display_name) {
                                 error!("Failed to show rename dialog: {}", e);
@@ -488,7 +517,11 @@ fn android_main(app: AndroidApp) {
                     EguiAppAction::DeleteFavorite(idx) => {
                         let favs = favorites_mgr.get_all();
                         if let Some(fav) = favs.get(idx) {
-                            info!("User tapped Delete on favourite #{}: {}", idx + 1, fav.display_name);
+                            info!(
+                                "User tapped Delete on favourite #{}: {}",
+                                idx + 1,
+                                fav.display_name
+                            );
                             status_msg = format!("Deleting '{}'...", fav.display_name);
                             if let Err(e) = show_delete_dialog(&app, idx, &fav.display_name) {
                                 error!("Failed to show delete dialog: {}", e);
@@ -556,23 +589,21 @@ fn check_picker_result(
                     }
                     updated = true;
                 }
-                PickerPurpose::AddToFavorites => {
-                    match resolve_favorite_media_file(app, &uri) {
-                        Ok(fav_file) => {
-                            let name = fav_file.display_name.clone();
-                            if fav_mgr.add_favorite(fav_file, app) {
-                                *status_msg = format!("Saved '{}' to favourites!", name);
-                            } else {
-                                *status_msg = format!("'{}' already in favourites", name);
-                            }
-                            updated = true;
+                PickerPurpose::AddToFavorites => match resolve_favorite_media_file(app, &uri) {
+                    Ok(fav_file) => {
+                        let name = fav_file.display_name.clone();
+                        if fav_mgr.add_favorite(fav_file, app) {
+                            *status_msg = format!("Saved '{}' to favourites!", name);
+                        } else {
+                            *status_msg = format!("'{}' already in favourites", name);
                         }
-                        Err(e) => {
-                            error!("Failed to resolve favourite file info: {}", e);
-                            *status_msg = format!("Error adding favourite: {}", e);
-                        }
+                        updated = true;
                     }
-                }
+                    Err(e) => {
+                        error!("Failed to resolve favourite file info: {}", e);
+                        *status_msg = format!("Error adding favourite: {}", e);
+                    }
+                },
             }
             clear_last_purpose();
             return updated;
