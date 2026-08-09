@@ -1,0 +1,6 @@
+target/
+*.apk
+*.dex
+*.class
+*.so
+.DS_Store
