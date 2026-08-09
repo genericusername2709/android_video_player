@@ -69,10 +69,8 @@ public class MainActivity extends NativeActivity {
             return;
         }
 
-        if (requestCode == 1001 || requestCode == 1002) {
-            synchronized (MainActivity.class) {
-                hasPickerFinished = true;
-            }
+        synchronized (MainActivity.class) {
+            hasPickerFinished = true;
         }
 
         if (resultCode == RESULT_OK && data != null && data.getData() != null) {
