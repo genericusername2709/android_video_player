@@ -49,7 +49,7 @@ impl FavoritesManager {
     /// Resolves local app storage path (internal_data_path / favourites.json)
     fn get_storage_path(app: &AndroidApp) -> PathBuf {
         let dir = app.internal_data_path().unwrap_or_else(|| {
-            PathBuf::from("/data/user/0/com.example.android_video_player/files")
+            PathBuf::from("/data/user/0/com.officewala.tmediaplayer/files")
         });
         if !dir.exists() {
             let _ = fs::create_dir_all(&dir);

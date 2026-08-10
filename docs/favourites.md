@@ -25,7 +25,7 @@ pub struct FavoriteMediaFile {
 
 ### `FavoritesManager`
 Thread-safe wrapper (`RwLock<Vec<FavoriteMediaFile>>`) that manages list mutations and disk synchronization:
-- **`load_from_storage(app)`:** Reads `/data/user/0/com.example.android_video_player/files/favourites.json` at app launch.
+- **`load_from_storage(app)`:** Reads `/data/user/0/com.officewala.tmediaplayer/files/favourites.json` at app launch.
 - **`save_to_storage(app)`:** Writes the JSON string array back to internal files directory atomically on mutation.
 - **`add_favorite(item, app)`:** Appends a new item if URI is not already present.
 - **`remove_favorite(index, app)`:** Deletes item at `index` and saves changes.

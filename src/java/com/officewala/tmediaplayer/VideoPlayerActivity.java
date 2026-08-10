@@ -1,4 +1,4 @@
-package com.example.android_video_player;
+package com.officewala.tmediaplayer;
 
 import android.app.Activity;
 import android.content.Intent;

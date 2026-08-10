@@ -72,7 +72,7 @@ fn get_main_activity_class<'a>(
         .map_err(|e| format!("Invalid ClassLoader object: {:?}", e))?;
 
     let class_name = env
-        .new_string("com.example.android_video_player.MainActivity")
+        .new_string("com.officewala.tmediaplayer.MainActivity")
         .map_err(|e| format!("Failed to create class name string: {:?}", e))?;
 
     let cls_obj = env

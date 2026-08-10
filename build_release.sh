@@ -51,11 +51,11 @@ rm -rf target/release_java_classes target/release_dex target/release_compiled_ma
 mkdir -p target/release_java_classes target/release_dex target/release_compiled_manifest
 
 javac -g:none -source 8 -target 8 -cp "$ANDROID_HOME/platforms/android-34/android.jar" \
-  java/com/example/android_video_player/*.java -d target/release_java_classes
+  java/com/officewala/tmediaplayer/*.java -d target/release_java_classes
 
 echo "=== 3. Generating Optimized Dalvik Executable (classes.dex) ==="
 "$ANDROID_HOME/build-tools/34.0.0/d8" --release --lib "$ANDROID_HOME/platforms/android-34/android.jar" \
-  --output target/release_dex target/release_java_classes/com/example/android_video_player/*.class
+  --output target/release_dex target/release_java_classes/com/officewala/tmediaplayer/*.class
 
 echo "=== 4. Compiling Binary AndroidManifest.xml & Resources ==="
 "$ANDROID_HOME/build-tools/34.0.0/aapt" package -f -M AndroidManifest.xml -S res \

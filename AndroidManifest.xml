@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.example.android_video_player"
+  package="com.officewala.tmediaplayer"
   android:versionCode="1"
   android:versionName="1.0">
 
@@ -12,14 +12,14 @@
   <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
   <application
-    android:label="TVideoPlayer"
+    android:label="TMediaPlayer"
     android:icon="@mipmap/ic_launcher"
     android:roundIcon="@mipmap/ic_launcher"
     android:hardwareAccelerated="true"
     android:hasCode="true">
 
     <activity
-      android:name="com.example.android_video_player.MainActivity"
+      android:name="com.officewala.tmediaplayer.MainActivity"
       android:hardwareAccelerated="true"
       android:configChanges="orientation|keyboardHidden|screenSize"
       android:exported="true">
@@ -35,7 +35,7 @@
     </activity>
 
     <activity
-      android:name="com.example.android_video_player.VideoPlayerActivity"
+      android:name="com.officewala.tmediaplayer.VideoPlayerActivity"
       android:hardwareAccelerated="true"
       android:configChanges="orientation|keyboardHidden|screenSize"
       android:exported="false" />

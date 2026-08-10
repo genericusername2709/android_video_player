@@ -8,7 +8,7 @@
 ### 1. Application Entry Point (`android_main`)
 - Annotated with `#[no_mangle] pub fn android_main(app: AndroidApp)` as required by `android_activity` / `NativeActivity`.
 - Sets up logger (`android_logger::init_once`).
-- Initializes `FavoritesManager` and loads saved favorites from app storage (`/data/user/0/com.example.android_video_player/files/favourites.json`).
+- Initializes `FavoritesManager` and loads saved favorites from app storage (`/data/user/0/com.officewala.tmediaplayer/files/favourites.json`).
 
 ### 2. GPU Render State (`RenderState`)
 - Configures `wgpu::Instance`, `wgpu::Adapter`, `wgpu::Device`, and `wgpu::Queue`.

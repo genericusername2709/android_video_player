@@ -7,7 +7,7 @@ The **Android GPU Video Player** is a high-performance native Android applicatio
 ### Core Features
 1. **Favorites Media Library:**
    - Add local video and audio files from Android storage into a persistent favorites list using the system Storage Access Framework (SAF) Document Picker.
-   - Persists metadata (display title, file size, media type, creation date, and last playback timestamp) in JSON format at `/data/user/0/com.example.android_video_player/files/favourites.json`.
+   - Persists metadata (display title, file size, media type, creation date, and last playback timestamp) in JSON format at `/data/user/0/com.officewala.tmediaplayer/files/favourites.json`.
 2. **In-App Media Playback & Resume:**
    - Dedicated `VideoPlayerActivity` utilizing Android `VideoView` and `MediaController`.
    - Tracks exact playback position in milliseconds (`last_position`) continuously.
@@ -74,8 +74,8 @@ The **Android GPU Video Player** is a high-performance native Android applicatio
 | **`favourites.rs`** | [`src/favourites.rs`](file:///home/mustafa/projects/rust-stuff/break-player/android_video_player/src/favourites.rs) | JSON persistence (`favourites.json`), thread-safe list mutations (`add`, `remove`, `rename`, `update_position`). |
 | **`media_picker.rs`** | [`src/media_picker.rs`](file:///home/mustafa/projects/rust-stuff/break-player/android_video_player/src/media_picker.rs) | JNI bridge to Android framework (File Picker Intent, ContentResolver metadata query, `AlertDialog` modals, playback launching). |
 | **`ui.rs`** | [`src/ui.rs`](file:///home/mustafa/projects/rust-stuff/break-player/android_video_player/src/ui.rs) | Standalone layout geometry math and 2D bounding box hit-testing helper functions. |
-| **`MainActivity.java`** | [`java/.../MainActivity.java`](file:///home/mustafa/projects/rust-stuff/break-player/android_video_player/java/com/example/android_video_player/MainActivity.java) | `NativeActivity` subclass in Java bridging SAF file pickers, Android `AlertDialog` modals, and Activity intent lifecycle. |
-| **`VideoPlayerActivity.java`** | [`java/.../VideoPlayerActivity.java`](file:///home/mustafa/projects/rust-stuff/break-player/android_video_player/java/com/example/android_video_player/VideoPlayerActivity.java) | Dedicated video playback activity running `VideoView` with `MediaController`, position tracking, and floating `[X]` exit button. |
+| **`MainActivity.java`** | [`java/.../MainActivity.java`](file:///home/mustafa/projects/rust-stuff/break-player/android_video_player/java/com/officewala/tmediaplayer/MainActivity.java) | `NativeActivity` subclass in Java bridging SAF file pickers, Android `AlertDialog` modals, and Activity intent lifecycle. |
+| **`VideoPlayerActivity.java`** | [`java/.../VideoPlayerActivity.java`](file:///home/mustafa/projects/rust-stuff/break-player/android_video_player/java/com/officewala/tmediaplayer/VideoPlayerActivity.java) | Dedicated video playback activity running `VideoView` with `MediaController`, position tracking, and floating `[X]` exit button. |
 
 ---
 

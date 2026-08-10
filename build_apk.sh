@@ -9,11 +9,11 @@ rm -rf target/java_classes target/dex target/compiled_manifest
 mkdir -p target/java_classes target/dex target/compiled_manifest
 
 javac -g:none -source 8 -target 8 -cp "$ANDROID_HOME/platforms/android-34/android.jar" \
-  java/com/example/android_video_player/*.java -d target/java_classes
+  java/com/officewala/tmediaplayer/*.java -d target/java_classes
 
 echo "=== 3. Generating Dalvik Executable (classes.dex) ==="
 "$ANDROID_HOME/build-tools/34.0.0/d8" --lib "$ANDROID_HOME/platforms/android-34/android.jar" \
-  --output target/dex target/java_classes/com/example/android_video_player/*.class
+  --output target/dex target/java_classes/com/officewala/tmediaplayer/*.class
 
 echo "=== 4. Compiling Binary AndroidManifest.xml & Resources ==="
 "$ANDROID_HOME/build-tools/34.0.0/aapt" package -f -M AndroidManifest.xml -S res \
@@ -37,4 +37,4 @@ echo "=== 7. Signing Final APK with Debug Key ==="
 "$ANDROID_HOME/build-tools/34.0.0/apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android \
   target/debug/apk/android_video_player.apk
 
-echo "=== SUCCESS! APK built with package com.example.android_video_player at: target/debug/apk/android_video_player.apk ==="
+echo "=== SUCCESS! APK built with package com.officewala.tmediaplayer at: target/debug/apk/android_video_player.apk ==="
